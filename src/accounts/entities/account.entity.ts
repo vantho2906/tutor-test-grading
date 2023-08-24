@@ -1,6 +1,8 @@
+import { Submit } from './../../submits/entities/submit.entity';
 import { RoleEnum } from '../../etc/enums';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Assignee } from '../../assignees/entities/assignee.entity';
 
 @Entity()
 export class Account {
@@ -21,6 +23,12 @@ export class Account {
 
   @Column({ nullable: true })
   avatarUrl: string;
+
+  @OneToMany(() => Assignee, (assignee) => assignee.student)
+  assignees: Assignee[];
+
+  @OneToMany(() => Submit, (submit) => submit.student)
+  submits: Submit[];
 
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, 8);
