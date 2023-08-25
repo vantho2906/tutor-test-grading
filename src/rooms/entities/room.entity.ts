@@ -8,6 +8,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { TopicImage } from '../../topic-images/entities/topicImage.entity';
 
 @Entity()
 export class Room {
@@ -43,6 +44,11 @@ export class Room {
 
   @OneToMany(() => Submit, (submit) => submit.room)
   submits: Submit[];
+
+  @OneToMany(() => TopicImage, (topicImage) => topicImage.room, {
+    cascade: true,
+  })
+  topicImages: TopicImage[];
 
   setType(type: RoomTypeEnum) {
     this.type = type;

@@ -16,6 +16,9 @@ export class Submit {
   @Column({ type: 'timestamp' })
   submittedAt: Date;
 
+  @Column({ nullable: true, type: 'float' })
+  score: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

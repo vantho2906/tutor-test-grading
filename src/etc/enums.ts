@@ -17,8 +17,8 @@ export enum RoomTypeEnum {
   MULTIPLE_CHOICE_COMPLEX = 'Multiple Choice Complex',
 }
 
-export enum RoomFilterEnum {
-  ASSIGNED = 'Assigned',
+export enum RoomFilterTypeEnum {
+  ALL = 'All',
   SUBMITTED = 'Submitted',
   NOT_SUBMITTED_YET = 'Not Submitted Yet',
   GRADED = 'Graded',

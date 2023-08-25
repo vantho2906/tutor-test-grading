@@ -10,6 +10,8 @@ import { RoomsModule } from './rooms/rooms.module';
 import { AssigneesModule } from './assignees/assignees.module';
 import { SubmitsModule } from './submits/submits.module';
 import { StudentsModule } from './students/students.module';
+import { TopicImagesModule } from './topic-images/topic-images.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { StudentsModule } from './students/students.module';
     AssigneesModule,
     SubmitsModule,
     StudentsModule,
+    TopicImagesModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

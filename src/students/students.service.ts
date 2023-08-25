@@ -23,7 +23,7 @@ export class StudentsService {
     private readonly accountRepository: Repository<Account>,
   ) {}
 
-  async searchStudentByNameForAssigningRoom(
+  async searchStudentsByNameForAssigningRoom(
     searchStudentsForAssignRoomDto: SearchStudentsForToggleAssignRoomDto,
   ) {
     const { roomID, name } = searchStudentsForAssignRoomDto;
@@ -48,10 +48,10 @@ export class StudentsService {
     return [students, null];
   }
 
-  async searchStudentByNameForCancelAssigningRoom(
-    searchStudentsForAssignRoomDto: SearchStudentsForToggleAssignRoomDto,
+  async searchStudentsByNameInARoom(
+    searchStudentsInARoomDto: SearchStudentsForToggleAssignRoomDto,
   ) {
-    const { roomID, name } = searchStudentsForAssignRoomDto;
+    const { roomID, name } = searchStudentsInARoomDto;
     const room = await this.roomsService.getRoomByID(roomID);
     if (!room) return [null, 'Room not found'];
     const students = await this.accountRepository

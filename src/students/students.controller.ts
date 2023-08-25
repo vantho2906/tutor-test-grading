@@ -20,12 +20,12 @@ export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Get('search-students-by-name-for-assigning-room')
-  async searchStudentByNameForAssigningRoom(
+  async searchStudentsByNameForAssigningRoom(
     @Query()
     searchStudentsForAssignRoomDto: SearchStudentsForToggleAssignRoomDto,
   ) {
     const [data, err] =
-      await this.studentsService.searchStudentByNameForAssigningRoom(
+      await this.studentsService.searchStudentsByNameForAssigningRoom(
         searchStudentsForAssignRoomDto,
       );
     if (err) {
@@ -44,15 +44,14 @@ export class StudentsController {
     );
   }
 
-  @Get('search-students-by-name-for-cancel-assigning-room')
-  async searchStudentByNameForCancelAssigningRoom(
+  @Get('search-students-by-name-in-a-room')
+  async searchStudentsByNameInARoom(
     @Query()
-    searchStudentsForCancelAssignRoomDto: SearchStudentsForToggleAssignRoomDto,
+    searchStudentsByNameInARoomDto: SearchStudentsForToggleAssignRoomDto,
   ) {
-    const [data, err] =
-      await this.studentsService.searchStudentByNameForCancelAssigningRoom(
-        searchStudentsForCancelAssignRoomDto,
-      );
+    const [data, err] = await this.studentsService.searchStudentsByNameInARoom(
+      searchStudentsByNameInARoomDto,
+    );
     if (err) {
       return new ResponseObject(
         HttpStatus.BAD_REQUEST,

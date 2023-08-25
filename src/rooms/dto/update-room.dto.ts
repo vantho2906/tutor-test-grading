@@ -1,6 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { CreateRoomDto } from './create-room.dto';
-import { RoomTypeEnum } from 'src/etc/enums';
 import { IsDate, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 

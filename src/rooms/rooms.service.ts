@@ -7,6 +7,12 @@ import { In, Repository } from 'typeorm';
 import { Submit } from 'src/submits/entities/submit.entity';
 import { ToggleAssignRoomForStudentsDto } from './dto/toggle-assign-room-for-students.dto';
 import { Assignee } from 'src/assignees/entities/assignee.entity';
+import { Account } from 'src/accounts/entities/account.entity';
+import { RoleEnum, RoomFilterTypeEnum, RoomTypeEnum } from 'src/etc/enums';
+import { GoogleApiService } from 'src/google-api/google-api.service';
+import { File } from 'src/files/entities/file.entity';
+import { getGoogleDriveUrl } from 'src/etc/google-drive-url';
+import { TopicImage } from 'src/topic-images/entities/topicImage.entity';
 
 @Injectable()
 export class RoomsService {
@@ -16,6 +22,11 @@ export class RoomsService {
     private readonly assigneeRepository: Repository<Assignee>,
     @InjectRepository(Submit)
     private readonly submitRepository: Repository<Submit>,
+    @InjectRepository(File)
+    private readonly fileRepository: Repository<File>,
+    @InjectRepository(TopicImage)
+    private readonly topicImageRepository: Repository<TopicImage>,
+    private readonly googleApiService: GoogleApiService,
   ) {}
   async createRoom(createRoomDto: CreateRoomDto) {
     const { type, name, maxSubmitTime, open, deadline, duration } =
@@ -130,6 +141,167 @@ export class RoomsService {
       student: { id: In(studentIDList) },
     });
     return [true, null];
+  }
+
+  async createTopicImages(roomID: number, files: Express.Multer.File[]) {
+    const room = await this.getRoomByID(roomID);
+    if (!room) return [null, 'Room not found'];
+    if (room.type == RoomTypeEnum.MULTIPLE_CHOICE_COMPLEX)
+      return [null, 'Can not create for room type multiple choice complex'];
+    const topicImages = [];
+    for (const file of files) {
+      const uploadedFile = await this.googleApiService.uploadFile(file);
+      const fileEntity = new File();
+      fileEntity.fileIdOnDrive = getGoogleDriveUrl(uploadedFile.id);
+      topicImages.push({ ...fileEntity, room: { id: roomID } });
+    }
+    const data = await this.topicImageRepository.save(topicImages);
+    return [data, null];
+  }
+
+  async seeTopicImages(self: Account, roomID: number) {
+    const room = await this.getRoomByID(roomID);
+    if (!room) return [null, 'Room not found'];
+    if (self.role == RoleEnum.STUDENT) {
+      const assignee = await this.assigneeRepository.findOne({
+        where: {
+          room: { id: roomID },
+          student: { id: self.id },
+        },
+      });
+      if (!assignee) return [null, 'You does not be assigned this room'];
+    }
+    const topicImages = await this.topicImageRepository.find({
+      where: {
+        room: { id: roomID },
+      },
+      relations: {
+        file: true,
+      },
+      order: {
+        file: { createdAt: 'ASC' },
+      },
+    });
+    return [topicImages, null];
+  }
+
+  async filterRooms(self: Account, roomFilterType: RoomFilterTypeEnum) {
+    switch (roomFilterType) {
+      case RoomFilterTypeEnum.ALL:
+        return [await this.getAllRoomsAssigned(self.id), null];
+        break;
+      case RoomFilterTypeEnum.SUBMITTED:
+        return [await this.getRoomsAssignedThatSubmitted(self.id), null];
+        break;
+      case RoomFilterTypeEnum.NOT_SUBMITTED_YET:
+        return [await this.getRoomsAssignedThatNotSubmitted(self.id), null];
+        break;
+      case RoomFilterTypeEnum.GRADED:
+        return [await this.getRoomsAssignedThatSubmitsAreGraded(self.id), null];
+        break;
+      case RoomFilterTypeEnum.NOT_GRADED_YET:
+        return [
+          await this.getRoomsAssignedThatSubmitsAreNotGraded(self.id),
+          null,
+        ];
+        break;
+      default:
+        return [null, 'Type is not valid'];
+        break;
+    }
+  }
+
+  async getAllRoomsAssigned(studentID: string) {
+    return await this.roomRepository
+      .createQueryBuilder('room')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('assignee.roomId')
+          .from(Assignee, 'assignee')
+          .where('assignee.studentId = :studentId', { studentId: studentID })
+          .getQuery();
+        return 'room.id in' + subQuery;
+      })
+      .orderBy('room.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getRoomsAssignedThatSubmitted(studentID: string) {
+    return await this.roomRepository
+      .createQueryBuilder('room')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('submit.roomId')
+          .from(Submit, 'submit')
+          .where('submit.studentId = :studentId', { studentId: studentID })
+          .getQuery();
+        return 'room.id in' + subQuery;
+      })
+      .orderBy('room.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getRoomsAssignedThatNotSubmitted(studentID: string) {
+    return await this.roomRepository
+      .createQueryBuilder('room')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('submit.roomId')
+          .from(Submit, 'submit')
+          .where('submit.studentId = :studentId', { studentId: studentID })
+          .getQuery();
+        return 'room.id not in' + subQuery;
+      })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('assignee.roomId')
+          .from(Assignee, 'assignee')
+          .where('assignee.studentId = :studentId', { studentId: studentID })
+          .getQuery();
+        return 'room.id in ' + subQuery;
+      })
+      .orderBy('room.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getRoomsAssignedThatSubmitsAreGraded(studentID: string) {
+    return await this.roomRepository
+      .createQueryBuilder('room')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('submit.roomId')
+          .from(Submit, 'submit')
+          .where('submit.studentId = :studentId and submit.score is not null', {
+            studentId: studentID,
+          })
+          .getQuery();
+        return 'room.id in' + subQuery;
+      })
+      .orderBy('room.createdAt', 'DESC')
+      .getMany();
+  }
+
+  async getRoomsAssignedThatSubmitsAreNotGraded(studentID: string) {
+    return await this.roomRepository
+      .createQueryBuilder('room')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('submit.roomId')
+          .from(Submit, 'submit')
+          .where('submit.studentId = :studentId and submit.score is null', {
+            studentId: studentID,
+          })
+          .getQuery();
+        return 'room.id in' + subQuery;
+      })
+      .orderBy('room.createdAt', 'DESC')
+      .getMany();
   }
 
   async getRoomByID(roomID: number) {
