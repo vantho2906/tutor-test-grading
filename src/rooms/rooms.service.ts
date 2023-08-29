@@ -13,6 +13,7 @@ import { GoogleApiService } from 'src/google-api/google-api.service';
 import { File } from 'src/files/entities/file.entity';
 import { getGoogleDriveUrl } from 'src/etc/google-drive-url';
 import { TopicImage } from 'src/topic-images/entities/topicImage.entity';
+import { log } from 'console';
 
 @Injectable()
 export class RoomsService {
@@ -149,13 +150,21 @@ export class RoomsService {
     if (room.type == RoomTypeEnum.MULTIPLE_CHOICE_COMPLEX)
       return [null, 'Can not create for room type multiple choice complex'];
     const topicImages = [];
+    const fileRecords: File[] = [];
     for (const file of files) {
       const uploadedFile = await this.googleApiService.uploadFile(file);
-      const fileEntity = new File();
-      fileEntity.fileIdOnDrive = getGoogleDriveUrl(uploadedFile.id);
-      topicImages.push({ ...fileEntity, room: { id: roomID } });
+      const fileRecord = new File();
+      fileRecord.fileIdOnDrive = getGoogleDriveUrl(uploadedFile.id);
+      fileRecords.push(fileRecord);
     }
-    const data = await this.topicImageRepository.save(topicImages);
+    const filesAfterSaving = await this.fileRepository.save(fileRecords);
+    log(filesAfterSaving);
+    for (const file of filesAfterSaving) {
+      topicImages.push({ file: { id: file.id }, room: { id: roomID } });
+    }
+    const data = this.topicImageRepository.create(topicImages);
+    log(data);
+    await this.topicImageRepository.save(data);
     return [data, null];
   }
 

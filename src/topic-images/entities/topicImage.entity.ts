@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -19,5 +20,6 @@ export class TopicImage {
   room: Room;
 
   @OneToOne(() => File, { cascade: true })
+  @JoinColumn()
   file: File;
 }

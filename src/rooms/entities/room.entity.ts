@@ -6,9 +6,12 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TopicImage } from '../../topic-images/entities/topicImage.entity';
+import { QuestionNumber } from '../../question-numbers/entities/question-number.entity';
+import { Question } from '../../questions/entities/question.entity';
 
 @Entity()
 export class Room {
@@ -30,7 +33,7 @@ export class Room {
   @Column({ type: 'timestamp' })
   deadline: Date;
 
-  @Column()
+  @Column({ nullable: true })
   duration: number;
 
   @CreateDateColumn()
@@ -49,6 +52,12 @@ export class Room {
     cascade: true,
   })
   topicImages: TopicImage[];
+
+  @OneToOne(() => QuestionNumber, (questionNumber) => questionNumber.room)
+  questionNumber: QuestionNumber;
+
+  @OneToMany(() => Question, (question) => question.room)
+  questions: Question[];
 
   setType(type: RoomTypeEnum) {
     this.type = type;

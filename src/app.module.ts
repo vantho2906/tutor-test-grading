@@ -12,6 +12,10 @@ import { SubmitsModule } from './submits/submits.module';
 import { StudentsModule } from './students/students.module';
 import { TopicImagesModule } from './topic-images/topic-images.module';
 import { FilesModule } from './files/files.module';
+import { QuestionNumbersModule } from './question-numbers/question-numbers.module';
+import { QuestionsModule } from './questions/questions.module';
+import { QuestionChoicesModule } from './question-choices/question-choices.module';
+import { QuestionSubmitsModule } from './question-submits/question-submits.module';
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { FilesModule } from './files/files.module';
     StudentsModule,
     TopicImagesModule,
     FilesModule,
+    QuestionNumbersModule,
+    QuestionsModule,
+    QuestionChoicesModule,
+    QuestionSubmitsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

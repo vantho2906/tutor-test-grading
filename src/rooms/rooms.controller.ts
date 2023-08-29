@@ -174,7 +174,7 @@ export class RoomsController {
     @Body() createTopicImagesDto: CreateTopicImagesDto,
   ) {
     const [data, err] = await this.roomService.createTopicImages(
-      createTopicImagesDto.roomID,
+      +createTopicImagesDto.roomID,
       files,
     );
     if (err) {
